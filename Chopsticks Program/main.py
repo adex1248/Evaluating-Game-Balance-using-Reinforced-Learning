@@ -98,7 +98,7 @@ while True:
     getMove(game, 0)
     print(game.po)
     
-    #Force Quit
+    #Force Shutdown
     #강제 종료
     if game.force == 2:
         break
