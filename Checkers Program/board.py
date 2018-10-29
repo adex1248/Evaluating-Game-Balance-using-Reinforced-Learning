@@ -1,7 +1,23 @@
 
 
 '''
-This game follows the rules of English Checkers.
+Created by Adex Kwak October 29th 2018
+
+This program is based (slightly) on Carson Wilcox (codeofcarson)'s checkers code.
+For his version of the code, go to:
+https://github.com/codeofcarson/Checkers
+
+This game follows the rules of English Checkers (a.k.a. American Checkers).
+
+
+제작자: 곽재우 2018/10/29
+
+이 프로그램은 Carson Wilcox (codeofcarson)님의 코드를 기반으로 하여 만들어진 채커 프로그램입니다.
+Carson Wilcox님의 코드를 보시려면, 
+https://github.com/codeofcarson/Checkers
+로 가시면 됩니다.
+
+이 프로그램은 영국식 채커 (또는 미국식 채커)의 규칙을 따릅니다.
 '''
 
 
