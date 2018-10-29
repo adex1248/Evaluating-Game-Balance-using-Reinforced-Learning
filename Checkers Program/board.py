@@ -1,9 +1,8 @@
-
-
 '''
+
 Created by Adex Kwak October 29th 2018
 
-This program is based (slightly) on Carson Wilcox (codeofcarson)'s checkers code.
+This program is based on Carson Wilcox (codeofcarson)'s checkers code.
 For his version of the code, go to:
 https://github.com/codeofcarson/Checkers
 
@@ -12,7 +11,7 @@ This game follows the rules of English Checkers (a.k.a. American Checkers).
 
 제작자: 곽재우 2018/10/29
 
-이 프로그램은 Carson Wilcox (codeofcarson)님의 코드를 기반으로 하여 만들어진 채커 프로그램입니다.
+이 프로그램은 Carson Wilcox (codeofcarson)님의 코드를 참고하여 만들어진 채커 프로그램입니다.
 Carson Wilcox님의 코드를 보시려면, 
 https://github.com/codeofcarson/Checkers
 로 가시면 됩니다.
@@ -21,20 +20,38 @@ https://github.com/codeofcarson/Checkers
 '''
 
 
+'''             #####error
+     /
+    / \
+   /   \
+    \  /
+     \/
+'''
 
+
+#The game board
+#게임판
 class board(object):
     BLACK = 1
     WHITE = 0
     def __init__(self, height, width):
         """
             Constructs a board
+            보드 생성
         """
         # Set the height and width of the game board
+        #게임판의 가로, 세로 길이를 설정
         self.width = width
         self.height = height
-        # Creates lists which will contain the pieces each player posesses
-        self.piecelist = [[], [], [], []]                ##white, black, whiteking, blackking
+        
+        # Creates the list which will contain the pieces each player posesses
+        #The order is as followed: White Men, Black Men, White Kings, Black Kings
+        #각 플레이어가 가진 말들의 정보를 지닌 리스트 생성
+        #순서대로 흰색 말, 검은색 말, 흰색 왕, 검은색 왕
+        self.piecelist = [[], [], [], []]
+        
         # Set default piece positions
+        #처음 말들의 위치를 설정
         for i in range(width):
             self.piecelist[1].append((i, (i+1)%2))
             if i % 2 == 1:
@@ -42,48 +59,90 @@ class board(object):
             else:
                 self.piecelist[0].append((i, height - 3))
             self.piecelist[0].append((i, height - (i%2) - 1))
+            
         # boardState contains the current state of the board for printing/eval
+        #현재 보드 출력할 상태에 대한 정보를 지님
         self.boardState = [[' '] * self.width for x in range(self.height)]
-        self.force = 0      #allows forced quit
-        self.debug = 0
+        
+        #Allows Forced Quit
+        #강제종료를 가능하게 함
+        self.force = 0
+        
+        #needed in generating moves
+        #행동가능성 생성에 관여
         self.block = 0
+    
     
     def GenMove(self, moves, color):
         '''
         Generates actual possible moves of pieces
+        실제로 할 수 있는 행동들 생성
+        
+        Let's look at what the equations mean.
+        아래 수식들이 의미하는 바를 살펴보자.
+        
+        3 - color         color + (-1) ** color
+        
+        0  ->  3              0  ->  1
+        1  ->  2              1  ->  0
+        2  ->  1              2  ->  3
+        3  ->  0              3  ->  2
+        
+        Therefore, these two equations gives out the numbers corresponding to the list with pieces of the opponent.
+        따라서, 이 두 수식은 상대방의 말들의 정보가 담긴 리스트에 해당하는 숫자들을 불러옴을 알 수 있다.
         '''
+        
+        
         for piece in self.piecelist[color]:
+            
+            #First, we check if there is any piece we can capture. If there is, we must capture at least one piece and there cannot
+            #simply move.
+            #우선적으로, 포획할 수 있는 말이 있는지 살핍니다. 있으면, 무조건 잡아야 하므로 단순히 움직이기만 할 수는 없습니다.
             for move in moves:
                 targetx = piece[0] + move[0]
                 targety = piece[1] + move[1]
                 target = (targetx, targety)
                     
-                if target not in self.piecelist[3 - color] and target not in self.piecelist[color + (-1) ** color]:                 #can only jump over opponent's piece
+                #Figure whether the piece in front is the opponent's
+                #말 바로 앞의 말이 상대방의 말인지 확인
+                if target not in self.piecelist[3 - color] and target not in self.piecelist[color + (-1) ** color]:
                     continue
                     
                 else:
                     jumpx = targetx + move[0]
                     jumpy = targety + move[1]
+                    
+                    #The piece must go in-bounds
+                    #보드 내에서 움직여야 함
                     if jumpx < 0 or jumpx >= self.width or jumpy < 0 or jumpy >= self.height:
                         continue
                     jump = (jumpx, jumpy)
-                    if target in self.piecelist[color] or target in self.piecelist[2-color]:
-                        continue
                     
+                    #If there is a piece behind the opponent's, we cannot capture
+                    #상대방의 말 뒤에 다른 말이 있으면, 포획은 불가
                     if jump not in self.piecelist[0] and jump not in self.piecelist[1] and jump not in self.piecelist[2]and jump not in self.piecelist[3]:
-                        self.block = 1                     #blocks any more moves not involving capture, since a capture is possible!
+                        #blocks any more moves not involving capture, since a capture is possible!
+                        #포획할 수 있으므로 포획을 포함하지 않는 움직임들 생성 억제
+                        self.block = 1    
+                        
                         yield [piece, jump]
                         
+                        #Check if there is any more that one can jump over
+                        #더 뛰어넘을 수는 없는지 확인
                         for i in self.jumper(jump, moves, color, [piece, jump]):
                             yield i
         
+        #If there is no piece to be captured
+        #포획가능 말이 없을 시
         if self.block != 1:
-            self.debug += 1
             for piece in self.piecelist[color]:
                 for move in moves:
                     targetx = piece[0] + move[0]
                     targety = piece[1] + move[1]
                     target = (targetx, targety)
+                    
+                    #The piece must go in-bounds
+                    #보드 내에서 움직여야 함
                     if target not in self.piecelist[0] and target not in self.piecelist[1] and target not in self.piecelist[2]and target not in self.piecelist[3]:
                         if targetx >= 0 and targetx < self.width and targety >= 0 and targety < self.height:
                             yield ([piece, target])
@@ -93,25 +152,39 @@ class board(object):
     def jumper(self, piece, moves, color, data):
         """
         Makes the moves of jumping over opponent's piece
+        한 번 뛰어넘은 후의 포획가능성을 확인
         """
+        
         for move in moves:
             targetx = piece[0] + move[0]
             targety = piece[1] + move[1]
             target = (targetx, targety)
-            if target in self.piecelist[color] or target in self.piecelist[2 - color]:                 #can only jump over opponent's piece
+            
+            #Figure whether the piece in front is the opponent's
+            #말 바로 앞의 말이 상대방의 말인지 확인
+            if target in self.piecelist[color] or target in self.piecelist[2 - color]:
                 continue
                     
 
             jumpx = targetx + move[0]
             jumpy = targety + move[1]
+            
+            #The piece must go in-bounds
+            #보드 내에서 움직여야 함
             if jumpx < 0 or jumpx >= self.width or jumpy < 0 or jumpy >= self.height:
                 continue
             jump = (jumpx, jumpy)
                 
+            #If there is a piece behind the opponent's, we cannot capture
+            #We cannot capture the piece we have already captured, either
+            #상대방의 말 뒤에 다른 말이 있으면, 포획은 불가
+            #이미 잡은 말 또한 포획 불가
             if jump not in self.piecelist[0] and jump not in self.piecelist[1] and jump not in self.piecelist[2] and jump not in self.piecelist[3] and jump != data[-2]:
                 data.append(jump)
                 yield data
                 
+                #See if there is another piece to capture
+                #잡을 수 있는 말이 더 있나 탐색
                 a = []
                 b = []
                 for move in moves:
@@ -119,18 +192,31 @@ class board(object):
                     b.append((jumpx + move[0] * 2, jumpy + move[1] * 2))
                         
                 for i in range(len(a)):
+                    #Opponent's piece nearby
+                    #상대방의 말이 근처에 위치
                     if a[i] in self.piecelist[3 - color] + self.piecelist[color + (-1) ** color] and a[i] != target:
+                        #Is there a piece behind?
+                        #뒤에 말이 있는가?
                         if b[i] not in self.piecelist[0] and b[i] not in self.piecelist[1] and b[i] not in self.piecelist[2]and b[i] not in self.piecelist[3] and b[i] not in data:
+                            #Does the piece go out?
+                            #말이 밖으로 나가는가?
                             if b[i][0] >= 0 and b[i][0] < self.width and b[i][1] >= 0 and b[i][1] < self.height:
                                 for i in self.jumper2(jump, moves, color, data, a[i], b[i]):
                                     yield i
 
                     
     def jumper2(self, piece, moves, color, data, c, d):
+        """
+        Make the moves after the second jump and onwards
+        두번째 점프 이후와 그 후의 움직임 확인
+        """
         
         jump = d
         data.append(jump)
         yield data
+        
+        #See if there is another piece to capture
+        #잡을 수 있는 말이 더 있나 탐색
         a = []
         b = []
         for move in moves:
@@ -149,24 +235,54 @@ class board(object):
     def Obtain(self, moves, color):
         '''
         Moves all capable moves into a list
+        가능한 모든 움직임을 리스트에 저장
         '''
         available1 = []
         available2 = []
+        
+        #If there is a piece in the kings list that can capture, the men's movements will still be made.
+        #Therefore, an element directly from the class is needed to remove the men's movements.
+        #왕들 중 포획이 가능한 것이 있다면, 일반 말들의 움직임은 생성될 것이다.
+        #따라서, 클래스에 직접적으로 지정된 원소로 일반 말들의 움직임을 지워야 한다.
         self.block = 0
+        
+        #Generate moves of men
+        #일반 말들의 움직임 생성
         for i in self.GenMove(moves, color):
             available1.append(i)
+        #See if there were any captures by men
+        #일반 말들이 포획했는지 확인
         temp1 = self.block
+        
+        #Generate moves of kings
+        #왕들의 움직임 생성
         for i in self.GenMove(((-1, -1), (1, -1), (-1, 1), (1, 1)), color+2):
             available2.append(i)
+            
+        #See explanation above(234~237)
+        #위 설명 참조(234~237)
         if temp1 == 0 and self.block == 1:
             available = available2
         else:
             available = available1 + available2
+            
         return available
     
     def move(self, move, color):
+        '''
+        Moves the piece selected
+        선택된 말을 움직임
+        '''
+        
+        #The final location of the piece
+        #말의 최종위치
         self.piecelist[color][self.piecelist[color].index(move[0])] = move[-1]
+        
+        #Did the piece capture anything?
+        #말이 무언가를 포획하였는가?
         if move[0][0] - move[1][0] != 1 and move[0][0] - move[1][0] != -1:
+            #Delete the pieces it captured
+            #포획한 말들 제거
             for i in range(len(move) - 1):
                 if (((move[i][0] + move[i+1][0])/2, (move[i][1] + move[i+1][1])/2)) in self.piecelist[3-color]:
                     self.piecelist[3-color].remove(((move[i][0] + move[i+1][0])/2, (move[i][1] + move[i+1][1])/2))
@@ -177,7 +293,12 @@ class board(object):
         self.updateBoard()
         
     def promote(self, piece, color):
-        if piece[1] == self.width - (1-color) * self.width - 1: #(4,7)
+        '''
+        Promotes men to kings if they reached the end
+        일반 말들이 끝까지 갔을 시에 왕으로 승격
+        '''
+        
+        if piece[1] == self.width - (1-color) * self.width - 1:
             self.piecelist[color].remove(piece)
             self.piecelist[color+2].append(piece)
             
@@ -185,8 +306,8 @@ class board(object):
 
     def updateBoard(self):
         """
-            Updates the array containing the board to reflect the current state of the pieces on the
-            board
+            Updates the array containing the board to reflect the current state of the pieces on the board
+            현재 보드 상태에 대해 업데이트
         """
         for i in range(self.width):
             for j in range(self.height):
@@ -204,13 +325,15 @@ class board(object):
 
     def printBoard(self):
         """
-            Prints the game board to stdout
+            Prints the game board
+            보드를 출력
         """
         print(self.unicode())
         
     def unicode(self):
         """
-            Contains the unicode and other BS for printing the board
+            Contains the unicode etc. for printing the board
+            보드 출력에 대한 정보를 지님
         """
         # Updates Game board
         self.updateBoard()
