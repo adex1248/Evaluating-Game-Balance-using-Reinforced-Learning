@@ -22,6 +22,9 @@ def getMove(game, turn):
             if b > np.sum(game.po[turn]) or b > 5 or b < 0:
                 print('Invalid, try again')
                 continue
+            elif b == game.po[turn][1] or b == game.po[turn][0]:
+                print("That move is impossible, try again")
+                continue
             else:
                 game.combine(turn, b)
                 return
