@@ -61,6 +61,7 @@ class board(object):
         #needed in generating moves
         #행동가능성 생성에 관여
         self.block = 0
+        
     
     
     def GenMove(self, moves, color):
@@ -114,13 +115,29 @@ class board(object):
                         #blocks any more moves not involving capture, since a capture is possible!
                         #포획할 수 있으므로 포획을 포함하지 않는 움직임들 생성 억제
                         self.block = 1    
-                        
-                        yield [piece, jump]
+                        data = [piece, jump]
                         
                         #Check if there is any more that one can jump over
                         #더 뛰어넘을 수는 없는지 확인
-                        for i in self.jumper(jump, moves, color, [piece, jump]):
-                            yield i
+                        block2 = 0
+                        for move in moves:
+                            target2 = (jumpx + move[0], jumpy + move[1])
+                            jump2 = (jumpx + 2 * move[0], jumpy + 2 * move[1])
+                            
+                            #Opponent's piece nearby?    상대방의 말이 가까이 있는가?
+                            if target2 in self.piecelist[3 - color] or target2 in self.piecelist[color + (-1) ** color]:
+                                #Is there space behind?   그 뒤에 공간이 있는가?
+                                if jump2 not in self.piecelist[0] and jump2 not in self.piecelist[1] and jump2 not in self.piecelist[2]and jump2 not in self.piecelist[3] and jump2 != data[-2]:
+                                    #Does it not go out of bounds?   보드를 벗어나지 않는가?
+                                    if jump2[0] >= 0 and jump2[0] < self.width and jump2[1] >= 0 and jump2[1] < self.height:
+                                        block2 = 1
+                                        for i in self.jumper(data, moves, color, move):
+                                            yield i
+                        #There is no more to jump over
+                        #더 뛰어넘을 수 있는 것이 없음
+                        if block2 == 0:
+                            yield data
+
         
         #If there is no piece to be captured
         #포획가능 말이 없을 시
@@ -139,88 +156,37 @@ class board(object):
 
                 
             
-    def jumper(self, piece, moves, color, data):
+    def jumper(self, data, moves, color, move):
         """
         Makes the moves of jumping over opponent's piece
-        한 번 뛰어넘은 후의 포획가능성을 확인
+        한 번 뛰어넘은 후의 움직임을 생성
         """
         
-        for move in moves:
-            targetx = piece[0] + move[0]
-            targety = piece[1] + move[1]
-            target = (targetx, targety)
-            
-            #Figure whether the piece in front is the opponent's
-            #말 바로 앞의 말이 상대방의 말인지 확인
-            if target in self.piecelist[color] or target in self.piecelist[2 - color]:
-                continue
-                    
-
-            jumpx = targetx + move[0]
-            jumpy = targety + move[1]
-            
-            #The piece must go in-bounds
-            #보드 내에서 움직여야 함
-            if jumpx < 0 or jumpx >= self.width or jumpy < 0 or jumpy >= self.height:
-                continue
-            jump = (jumpx, jumpy)
-                
-            #If there is a piece behind the opponent's, we cannot capture
-            #We cannot capture the piece we have already captured, either
-            #상대방의 말 뒤에 다른 말이 있으면, 포획은 불가
-            #이미 잡은 말 또한 포획 불가
-            if jump not in self.piecelist[0] and jump not in self.piecelist[1] and jump not in self.piecelist[2] and jump not in self.piecelist[3] and jump != data[-2]:
-                data.append(jump)
-                yield data
-                
-                #See if there is another piece to capture
-                #잡을 수 있는 말이 더 있나 탐색
-                a = []
-                b = []
-                for move in moves:
-                    a.append((jumpx + move[0], jumpy + move[1]))
-                    b.append((jumpx + move[0] * 2, jumpy + move[1] * 2))
-                        
-                for i in range(len(a)):
-                    #Opponent's piece nearby
-                    #상대방의 말이 근처에 위치
-                    if a[i] in self.piecelist[3 - color] + self.piecelist[color + (-1) ** color] and a[i] != target:
-                        #Is there a piece behind?
-                        #뒤에 말이 있는가?
-                        if b[i] not in self.piecelist[0] and b[i] not in self.piecelist[1] and b[i] not in self.piecelist[2]and b[i] not in self.piecelist[3] and b[i] not in data:
-                            #Does the piece go out?
-                            #말이 밖으로 나가는가?
-                            if b[i][0] >= 0 and b[i][0] < self.width and b[i][1] >= 0 and b[i][1] < self.height:
-                                for i in self.jumper2(jump, moves, color, data, a[i], b[i]):
-                                    yield i
-
-                    
-    def jumper2(self, piece, moves, color, data, c, d):
-        """
-        Make the moves after the second jump and onwards
-        두번째 점프 이후와 그 후의 움직임 확인
-        """
+        data.append((data[-1][0] + 2 * move[0], data[-1][1] + 2 * move[1]))
         
-        jump = d
-        data.append(jump)
-        yield data
-        
-        #See if there is another piece to capture
-        #잡을 수 있는 말이 더 있나 탐색
-        a = []
-        b = []
-        for move in moves:
-            a.append((jump[0] + move[0], jump[1] + move[1]))
-            b.append((jump[0] + move[0] * 2, jump[1] + move[1] * 2))
-                        
-        for i in range(len(a)):
-            if a[i] in self.piecelist[3 - color] + self.piecelist[color + (-1) ** color] and a[i] != c:
-                if b[i] not in self.piecelist[0] and b[i] not in self.piecelist[1] and b[i] not in self.piecelist[2]and b[i] not in self.piecelist[3] and b[i] not in data:
-                    if b[i][0] >= 0 and b[i][0] < self.width and b[i][1] >= 0 and b[i][1] < self.height:
-                        for i in self.jumper2(jump, moves, color, [piece, jump], a[i], b[i]):
+        #Check if there is any more that one can jump over
+        #더 뛰어넘을 수는 없는지 확인
+        block2 = 0
+        for move2 in moves:
+            target = (data[-1][0] + move2[0], data[-1][1] + move2[1])
+            jump = (data[-1][0] + 2 * move2[0], data[-1][1] + 2 * move2[1])
+                            
+            #Opponent's piece nearby?    상대방의 말이 가까이 있는가?
+            if target in self.piecelist[3 - color] or target in self.piecelist[color + (-1) ** color]:
+                #Is there space behind?   그 뒤에 공간이 있는가?
+                if jump not in self.piecelist[0] and jump not in self.piecelist[1] and jump not in self.piecelist[2]and jump not in self.piecelist[3] and jump != data[-2]:
+                    #Does it not go out of bounds?   보드를 벗어나지 않는가?
+                    if jump[0] >= 0 and jump[0] < self.width and jump[1] >= 0 and jump[1] < self.height:
+                        block2 = 1
+                        for i in self.jumper(data, moves, color, move2):
                             yield i
+                       
+        #There is no more to jump over
+        #더 뛰어넘을 수 있는 것이 없음
+        if block2 == 0:
+            yield data
     
-    
+
                     
     def Obtain(self, moves, color):
         '''
@@ -258,6 +224,8 @@ class board(object):
             
         return available
     
+    
+    
     def move(self, move, color):
         '''
         Moves the piece selected
@@ -281,6 +249,8 @@ class board(object):
                 else:
                     raise Exception
         self.updateBoard()
+        
+        
         
     def promote(self, piece, color):
         '''
@@ -319,6 +289,8 @@ class board(object):
             보드를 출력
         """
         print(self.unicode())
+        
+        
         
     def unicode(self):
         """
