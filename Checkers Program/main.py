@@ -69,14 +69,30 @@ def getUserMove(b, color):
             print("Invalid move. Please select one of the moves above.")
             continue
 
+        temp = 0
         for i in available:
             if move[0] == i[0] and move[-1] == i[-1]:
-                move = i
-                break
+                if temp == 0:
+                    move = i
+                    temp = 1
+                else:
+                    move = (i[0], i[-1])
+                    while True:
+                        print("Which exact route are you going to go? Example:", i)
+                        move = input().lower().split()
+                        move2 = []
+                        for j in move:
+                            move2.append((int(j[1]), ord(j[0]) - 97))
+                        if move2 not in available:
+                            print("Invalid move. Please select one of the moves above.")
+                            continue
+                        else:
+                            move = move2
+                            break
+                
         
         if moveFromTup in b.piecelist[color]:
-            b.move(move, color)
-            
+            b.move(move, color)   
         else:
             b.move(move, color+2)
         
