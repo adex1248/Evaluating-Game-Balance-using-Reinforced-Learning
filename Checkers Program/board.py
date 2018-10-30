@@ -19,16 +19,6 @@ https://github.com/codeofcarson/Checkers
 이 프로그램은 영국식 채커 (또는 미국식 채커)의 규칙을 따릅니다.
 '''
 
-
-'''             #####error
-     /
-    / \
-   /   \
-    \  /
-     \/
-'''
-
-
 #The game board
 #게임판
 class board(object):
