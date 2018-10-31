@@ -105,7 +105,7 @@ if True:
             while True:
                 action = agent.get_action(state)
                 if action <= 4:
-                    if action > np.sum(env.chop.po[env.turn]) or action == env.chop.po[env.turn][1] or action == env.chop.po[env.turn][0]:
+                    if action < np.sum(env.shop.po[env.turn]) - 5 or action > np.sum(env.chop.po[env.turn]) or action == env.chop.po[env.turn][1] or action == env.chop.po[env.turn][0]:
                         rewardsmall -= 1
                         continue
                 else:
