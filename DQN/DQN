@@ -1,3 +1,5 @@
+#DQN이다
+
 import sys
 import gym
 import pylab
@@ -8,7 +10,7 @@ from keras.layers import Dense
 from keras.optimizers import Adam
 from keras.models import Sequential
 
-EPISODES = 300
+EPISODES = 50000
 
 
 # 카트폴 예제에서의 DQN 에이전트
@@ -80,8 +82,8 @@ class DQNAgent:
         # 메모리에서 배치 크기만큼 무작위로 샘플 추출
         mini_batch = random.sample(self.memory, self.batch_size)
 
-        states = np.zeros((self.batch_size, self.state_size)) #이 부분은 우리의 state_size가 1차원을 넘으면 states = np.zeros((self.batch_size, self.state_size[0], self.state_size[1]......))
-        next_states = np.zeros((self.batch_size, self.state_size)) #이 부분도 위와 동일
+        states = np.zeros((self.batch_size, self.state_size[0], self.state_size[1])) #이 부분은 우리의 state_size가 1차원을 넘으면 states = np.zeros((self.batch_size, self.state_size[0], self.state_size[1]......))
+        next_states = np.zeros((self.batch_size, self.state_size[0], self.state_size[1])) #이 부분도 위와 동일
         actions, rewards, dones = [], [], []
 
         for i in range(self.batch_size):
@@ -152,7 +154,7 @@ if __name__ == "__main__":
                 agent.update_target_model()
                 
                 # 이기면 victory가 1 올라가고 아니면 그대로 유지
-                if win:
+                if I_win:
                     victory = 1
                 else :
                     victory = 0
