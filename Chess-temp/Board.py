@@ -36,10 +36,10 @@ class board(object):
                 self.piecelist[1][1].append([i, 0])
             elif i == 3:
                 self.piecelist[0][4].append([i, 7])       #queen
-                self.piecelist[1][4].append([i, 7])
+                self.piecelist[1][4].append([i, 0])
             else:
                 self.piecelist[0][5].append([i, 7])       #king
-                self.piecelist[1][5].append([i, 7])
+                self.piecelist[1][5].append([i, 0])
             
         # boardState contains the current state of the board for printing/eval
         #현재 보드 출력할 상태에 대한 정보를 지님
@@ -74,12 +74,12 @@ class board(object):
         """
         for i in range(self.width):
             for j in range(self.height):
-                self.boardState[i][j] = " "
+                self.boardState[i][j] = "  "
         for pieces in range(len(self.piecelist[0])):
-            for piece in self.piecelist[pieces]:
+            for piece in self.piecelist[0][pieces]:
                 self.boardState[piece[1]][piece[0]] = 'W' + self.type_piece[pieces]
         for pieces in range(len(self.piecelist[1])):
-            for piece in self.piecelist[pieces]:
+            for piece in self.piecelist[1][pieces]:
                 self.boardState[piece[1]][piece[0]] = 'B' + self.type_piece[pieces]
 
 
@@ -104,21 +104,22 @@ class board(object):
         # This prints the numbers at the top of the Game Board
         lines.append('      ' + '    '.join(map(str, range(1,9))))
         # Prints the top of the gameboard in unicode
-        lines.append(u'  ╭' + (u'---┬' * (self.width-1)) + u'---╮')
+        lines.append(u'  ╭' + (u'----┬' * (self.width-1)) + u'----╮')
         
         # Print the boards rows
         for num, row in enumerate(self.boardState[:-1]):
             lines.append(chr(num+65) + u' │ ' + u' │ '.join(row) + u' │')
-            lines.append(u'  ├' + (u'---┼' * (self.width-1)) + u'---┤')
+            lines.append(u'  ├' + (u'----┼' * (self.width-1)) + u'----┤')
         
         #Print the last row
         lines.append(chr(self.height+64) + u' │ ' + u' │ '.join(self.boardState[-1]) + u' │')
 
         # Prints the final line in the board
-        lines.append(u'  ╰' + (u'---┴' * (self.width-1)) + u'---╯')
+        lines.append(u'  ╰' + (u'----┴' * (self.width-1)) + u'----╯')
         return '\n'.join(lines)
 
 
 
 b = board()
 b.printBoard()
+print(b.boardState)
