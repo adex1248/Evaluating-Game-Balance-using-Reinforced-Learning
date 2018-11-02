@@ -233,6 +233,7 @@ class Chopstick():
     #게임을 리셋
     def reset(self):
         self.state = np.ones((2,2)) #원래 상태를 이렇게 돌려놓아 준건데 내가 잘못 넣은 거면 수정 부탁
+        self.chop.po = np.ones((2,2))
         return np.array(self.state)
 
 
@@ -279,7 +280,7 @@ class DQNAgent:
         self.epsilon_decay = 0.999
         self.epsilon_min = 0.01
         self.batch_size = 64
-        self.train_start = 5000
+        self.train_start = 100
 
         # 리플레이 메모리, 최대 크기 4000
         self.memory = deque(maxlen=4000)
@@ -329,10 +330,11 @@ class DQNAgent:
             self.epsilon *= self.epsilon_decay
 
         # 메모리에서 배치 크기만큼 무작위로 샘플 추출
+        
         mini_batch = random.sample(self.memory, self.batch_size)
 
-        states = np.zeros((self.batch_size, self.state_size[0], self.state_size[1])) #이 부분은 우리의 state_size가 1차원을 넘으면 states = np.zeros((self.batch_size, self.state_size[0], self.state_size[1]......))
-        next_states = np.zeros((self.batch_size, self.state_size[0], self.state_size[1])) #이 부분도 위와 동일
+        states = np.zeros((self.batch_size, self.state_size)) #이 부분은 우리의 state_size가 1차원을 넘으면 states = np.zeros((self.batch_size, self.state_size[0], self.state_size[1]......))
+        next_states = np.zeros((self.batch_size, self.state_size)) #이 부분도 위와 동일
         actions, rewards, dones = [], [], []
 
         for i in range(self.batch_size):
@@ -432,4 +434,3 @@ if True:
                 pylab.savefig("./save_graph/cartpole_dqn.png")
                 print("episode:", e, "  victory:", victory , "total_victory:" , sum(victories) , "  memory length:", len(agent.memory), "  epsilon:", agent.epsilon)
             env.turn = 1 - env.turn
-            print("env.turn, victory, done")
