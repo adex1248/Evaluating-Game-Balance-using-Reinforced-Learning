@@ -374,12 +374,17 @@ if True:
 
     victories, episodes = [], []
 
+    total_victory = [0]
+    probability = [0]
+    
+    turn_env = 1
     for e in range(EPISODES):
+        turn_env = 1 - turn_env
         done = False
         # env 초기화
         state = env.reset()
         state = np.reshape(state, [1, state_size])
-        env.turn = 0
+        env1.turn = 0
 
         while not done:
             if agent.render:
@@ -391,7 +396,7 @@ if True:
             while True:
                 action = agent.get_action(state)
                 if action <= 4:
-                    if action > np.sum(env.chop.po[env.turn]) or action == env.chop.po[env.turn][1] or action == env.chop.po[env.turn][0]:
+                    if action > np.sum(env.chop.po[env1.turn]) or action == env.chop.po[env.turn][1] or action == env.chop.po[env.turn][0]:
                         rewardsmall -= 1
                         continue
                 else:
@@ -428,9 +433,11 @@ if True:
                    
                     
                 # 에피소드마다 학습 결과 출력
+                total_victory.append(total_victory[-1] + victory)
+                probability.append((probability[-1] * (len(total_victory) - 2) + victory) / (len(total_victory) - 1))
                 victories.append(victory)
                 episodes.append(e)
-                pylab.plot(episodes, victories, 'b')
-                pylab.savefig("./save_graph/cartpole_dqn.png")
-                print("episode:", e, "  victory:", victory , "total_victory:" , sum(victories) , "  memory length:", len(agent.memory), "  epsilon:", agent.epsilon, "percentage of winning", sum(victories)/ (e+1) )
+                pylab.plot(episodes, probability[1:] , 'b')
+                pylab.savefig("./save_graph/cartpole_dqn3.png")
+                print("episode:", e, "  victory:", victory , "total_victory:" , total_victory[-1] , "  memory length:", len(agent.memory), "  epsilon:", agent.epsilon, "percentage of winning", probability[-1] )
             env.turn = 1 - env.turn
