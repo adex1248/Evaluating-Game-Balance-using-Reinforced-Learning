@@ -191,6 +191,7 @@ class Chopstick():
     # 루프 게임을 수행한다
     def step(self, action, rewardsmall):
         assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
+        state = self.state
         #I_r, I_l, O_r, O_l = state
         #각각의 액션의 0~8까지의 행동 지정 
         if action == 0:
@@ -216,6 +217,7 @@ class Chopstick():
                 or np.sum(self.chop.po[1]) == 0 \
             
         self.state = self.chop.po
+
             
         #done이 게임이 끝나면 True로 바뀐다
         done = bool(done)
@@ -361,17 +363,16 @@ class DQNAgent:
         self.model.fit(states, target, batch_size=self.batch_size,
                        epochs=1, verbose=0)
 
-##########################################################################################################
+
 
 if True:
     #  환경 지정, 최대 타임스텝 수가 몇갠지는 위에 episode로
-    env = Chopstick()
+    env =Chopstick()
     state_size = 4
     action_size = 9
 
 
     # DQN 에이전트 생성
-    #모든 것은 1플레이어의 기준으로 데이터가 표시됩니다.
     agent = [DQNAgent(state_size, action_size), DQNAgent(state_size, action_size)]
 
     victories, episodes = [], []
@@ -379,39 +380,36 @@ if True:
     total_victory = [0]
     probability = [0]
     
+    turn_env = 1
     for e in range(EPISODES):
-        turn_env = 1
-        
-        po = np.ones((2,2))
+
         done = False
-        # env 초기화        
+        # env 초기화
         state = env.reset()
         state = np.reshape(state, [1, state_size])
-        #env.turn = 0
-
+        env.turn = 0
+        
         actionprev = None
         stateprev = None
         rewardprev = None
         next_stateprev = None
-        
+
         while not done:
-            turn_env = 1 - turn_env
-            
-            if agent[turn_env].render:
+            if agent[env.turn].render:
                 env.render()
 
-                
+
                 
             # 현재 상태로 행동을 선택
             rewardsmall = 0
             while True:
-                action = agent[turn_env].get_action(state)
+                action = agent[env.turn].get_action(state)
                 if action <= 4:
-                    if action > np.sum(env.chop.po[turn_env]) or action == env.chop.po[turn_env][1] or action == env.chop.po[turn_env][0]:
+                    if action < np.sum(env.chop.po[env.turn]) - 4 or action > np.sum(env.chop.po[env.turn]) or action == env.chop.po[env.turn][1] or action == env.chop.po[env.turn][0]:
                         rewardsmall -= 1
                         continue
                 else:
-                    if env.chop.po[turn_env][action // 7] <= 0 or env.chop.po[1 - turn_env][action % 2] <= 0:
+                    if env.chop.po[env.turn][action // 7] <= 0 or env.chop.po[1 - env.turn][action % 2] <= 0:
                         rewardsmall -= 1
                         continue
                 
@@ -424,19 +422,17 @@ if True:
             # 에피소드가 중간에 끝나면 -100 보상
 
             # 리플레이 메모리에 샘플 <s, a, r, s'> 저장
-            agent[turn_env].append_sample(state, action, reward, next_state, done)
+            agent[env.turn].append_sample(state, action, reward, next_state, done)
             # 매 타임스텝마다 학습
-            if len(agent[turn_env].memory) >= agent[turn_env].train_start:
-                agent[turn_env].train_model()
+            if len(agent[env.turn].memory) >= agent[env.turn].train_start:
+                agent[env.turn].train_model()
 
             
+            state = next_state
 
             if done:
                 # 각 에피소드마다 타깃 모델을 모델의 가중치로 업데이트
-                agent[turn_env].update_target_model()
-                
-                
-                agent[1-turn_env].append_sample(stateprev, actionprev, rewardprev, next_stateprev, done)
+                agent[env.turn].update_target_model()
                 
                 # 이기면 victory가 1 올라가고 아니면 그대로 유지
                 if not np.sum(env.chop.po[1]):
@@ -447,22 +443,13 @@ if True:
                     
                 # 에피소드마다 학습 결과 출력
                 total_victory.append(total_victory[-1] + victory)
-                probability.append((probability[-1] * (len(total_victory) - 2) + victory) / (len(total_victory) - 1))
+                if e <= 99:
+                    probability.append((probability[-1] * (len(total_victory) - 2) + victory) / (len(total_victory) - 1))
+                else:
+                    probability.append((probability[-1] * 100 - victories[-100] + victory) / 100)
                 victories.append(victory)
                 episodes.append(e)
                 pylab.plot(episodes, probability[1:] , 'b')
-                pylab.savefig("./save_graph/cartpole_dqn4.png")
-                print("episode:", e, "  victory:", victory , "total_victory:" , total_victory[-1] , "  memory length:", len(agent[turn_env].memory), "  epsilon 0:", agent[0].epsilon, " epsilon 1:", agent[1].epsilon, "percentage of winning", probability[-1] )
-            
-            else:
-                actionprev = action
-                stateprev = state
-                rewardprev = reward
-                next_stateprev = next_state
-            
-            state = next_state
-
-                
-            #env.turn = 1 - env.turn
-            env[1 - turn_env].chop.po = env[turn_env].chop.po
-            
+                pylab.savefig("./save_graph/cartpole_dqn3.png")
+                print("episode:", e, "victory:", victory , "total_victory:" , total_victory[-1] , "  memory length:", len(agent[env.turn].memory), "  epsilon:", agent[env.turn].epsilon, "percentage of winning", probability[-1] )
+            env.turn = 1 - env.turn
