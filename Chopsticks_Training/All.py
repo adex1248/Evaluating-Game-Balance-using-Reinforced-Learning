@@ -377,14 +377,14 @@ if True:
     total_victory = [0]
     probability = [0]
     
-    turn_env = 1
+    #turn_env = 1
     for e in range(EPISODES):
-        turn_env = 1 - turn_env
+        #turn_env = 1 - turn_env
         done = False
         # env 초기화
         state = env.reset()
         state = np.reshape(state, [1, state_size])
-        env1.turn = 0
+        env.turn = 0
 
         while not done:
             if agent.render:
