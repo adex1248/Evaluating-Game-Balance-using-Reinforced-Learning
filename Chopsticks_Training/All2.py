@@ -403,7 +403,7 @@ if True:
 
 
                 
-            # 현재 상태로 행동을 선택
+            # 현재 상태로 행동을 선택 (액션 개수가 매번 다르므로 범위를 초과할 때 재실행)
             rewardsmall = 0
             while True:
                 action = agent[env.turn].get_action(state)
