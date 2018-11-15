@@ -49,10 +49,6 @@
                     self.boardState = [[' '] * self.width for x in range(self.height)]
                     self.updateBoard()
 
-                    #Allows Forced Quit
-                    #강제종료를 가능하게 함
-                    self.force = 0
-
                     #needed in generating moves
                     #행동가능성 생성에 관여
                     self.block = 0
@@ -544,6 +540,7 @@ if True:
 
     victories, episodes = [], []
 
+    #확률 계산
     probability0 = [0]
     probability1 = [0]
     probability2 = [0]
@@ -556,6 +553,7 @@ if True:
         state = np.reshape(state, [1, state_size])
         env.turn = 0
         
+        #무승부일 시
         env.draw = 0
         
         actionprev = None
@@ -575,7 +573,7 @@ if True:
                 
             if temp == 0:
                 
-                # 현재 상태로 행동을 선택
+                # 현재 상태로 행동을 선택 (액션 개수가 매번 다르므로 범위를 초과할 때 재실행)
                 rewardsmall = 0
                 while True:
                     action = agent[env.turn].get_action(state)
@@ -614,7 +612,7 @@ if True:
                 if victory != 2:
                     agent[1 - env.turn].append_sample(stateprev, actionprev, -1000, next_stateprev, not done)
                     
-                    # 에피소드마다 학습 결과 출력
+                    # 에피소드마다 확률 출력
                     if e <= 99:
                         probability0.append( (probability0[-1] * (e) + victory) / (e + 1) )
                         probability1.append( (probability1[-1] * (e) + (1 - victory)) / (e + 1) )
