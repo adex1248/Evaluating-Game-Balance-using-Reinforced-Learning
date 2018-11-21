@@ -42,13 +42,13 @@ class board(object):
         
         # Set default piece positions
         #처음 말들의 위치를 설정
-        for i in range(width):
+        for i in range(self.width):
             self.piecelist[1].append((i, (i+1)%2))
             if i % 2 == 1:
                 self.piecelist[1].append((i, 2))
             else:
-                self.piecelist[0].append((i, height - 3))
-            self.piecelist[0].append((i, height - (i%2) - 1))
+                self.piecelist[0].append((i, self.height - 3))
+            self.piecelist[0].append((i, self.height - (i%2) - 1))
             
         # boardState contains the current state of the board for printing/eval
         #현재 보드 출력할 상태에 대한 정보를 지님
@@ -90,9 +90,7 @@ class board(object):
             #simply move.
             #우선적으로, 포획할 수 있는 말이 있는지 살핍니다. 있으면, 무조건 잡아야 하므로 단순히 움직이기만 할 수는 없습니다.
             for move in moves:
-                targetx = piece[0] + move[0]
-                targety = piece[1] + move[1]
-                target = (targetx, targety)
+                target = (piece[0] + move[0], piece[1] + move[1])
                     
                 #Figure whether the piece in front is the opponent's
                 #말 바로 앞의 말이 상대방의 말인지 확인
@@ -100,14 +98,12 @@ class board(object):
                     continue
                     
                 else:
-                    jumpx = targetx + move[0]
-                    jumpy = targety + move[1]
+                    jump = (target[0] + move[0], target[1] + move[1])
                     
                     #The piece must go in-bounds
                     #보드 내에서 움직여야 함
-                    if jumpx < 0 or jumpx >= self.width or jumpy < 0 or jumpy >= self.height:
+                    if jump[0] < 0 or jump[0] >= self.width or jump[1] < 0 or jump[1] >= self.height:
                         continue
-                    jump = (jumpx, jumpy)
                     
                     #If there is a piece behind the opponent's, we cannot capture
                     #상대방의 말 뒤에 다른 말이 있으면, 포획은 불가
@@ -121,8 +117,8 @@ class board(object):
                         #더 뛰어넘을 수는 없는지 확인
                         block2 = 0
                         for move in moves:
-                            target2 = (jumpx + move[0], jumpy + move[1])
-                            jump2 = (jumpx + 2 * move[0], jumpy + 2 * move[1])
+                            target2 = (jump[0] + move[0], jump[1] + move[1])
+                            jump2 = (jump[0] + 2 * move[0], jump[1] + 2 * move[1])
                             
                             #Opponent's piece nearby?    상대방의 말이 가까이 있는가?
                             if target2 in self.piecelist[3 - color] or target2 in self.piecelist[color + (-1) ** color]:
@@ -144,14 +140,12 @@ class board(object):
         if self.block != 1:
             for piece in self.piecelist[color]:
                 for move in moves:
-                    targetx = piece[0] + move[0]
-                    targety = piece[1] + move[1]
-                    target = (targetx, targety)
+                    target = (piece[0] + move[0], piece[1] + move[1])
                     
                     #The piece must go in-bounds
                     #보드 내에서 움직여야 함
                     if target not in self.piecelist[0] and target not in self.piecelist[1] and target not in self.piecelist[2]and target not in self.piecelist[3]:
-                        if targetx >= 0 and targetx < self.width and targety >= 0 and targety < self.height:
+                        if target[0] >= 0 and target[0] < self.width and target[1] >= 0 and target[1] < self.height:
                             yield ([piece, target])
 
                 
