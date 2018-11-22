@@ -98,14 +98,12 @@ class Chopstick():
         self.state = self.chop.po
 
             
-        #done이 게임이 끝나면 True로 바뀐다
         done = bool(done)
-        # 안끝나면 둘다 보상 없음 끝나고 내가 이기면 검정이 보상 1 받음 상대가 이기면 보상 -1
         
         if not done:
             reward = 0
         else:
-            if not np.sum(self.chop.po[1 - self.turn]): #
+            if not np.sum(self.chop.po[1 - self.turn]):
                 reward = 100
             else:
                 reward = -100
@@ -114,7 +112,7 @@ class Chopstick():
 
     #게임을 리셋
     def reset(self):
-        self.state = np.ones((2,2)) #원래 상태를 이렇게 돌려놓아 준건데 내가 잘못 넣은 거면 수정 부탁
+        self.state = np.ones((2,2))
         self.chop.po = np.ones((2,2))
         return np.array(self.state)
 
