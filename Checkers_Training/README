@@ -1,0 +1,6 @@
+This is the program used in Checkers Reinforced Learning.
+All.py is the refined version, while All_Unrefined.py is the unrefined one which was actually used in our research.
+Please use All.py unless it is bugged. 
+이 프로그램은 채커 강화학습에 이용된 코드입니다.
+All.py는 정제된 버전이며, All_Unrefined.py는 실제 연구에 사용되었던, 비정제 버전입니다.
+버그나지 않는 이상 All.py를 이용하시기 바랍니다.
