@@ -111,12 +111,15 @@ class board(object):
                         #blocks any more moves not involving capture, since a capture is possible!
                         #포획할 수 있으므로 포획을 포함하지 않는 움직임들 생성 억제
                         self.block = 1    
-                        data = [piece, jump]
+                        
+                        #list of piece jumped over   잡은 말들에 대한 리스트
+                        stop_back = [ ( (piece[0] + jumpx)//2, (piece[1] + jumpy)//2 ) ]
                         
                         #Check if there is any more that one can jump over
                         #더 뛰어넘을 수는 없는지 확인
-                        block2 = 0
+                        block2 = 1
                         for move in moves:
+                            data = [piece, jump]
                             target2 = (jump[0] + move[0], jump[1] + move[1])
                             jump2 = (jump[0] + 2 * move[0], jump[1] + 2 * move[1])
                             
@@ -126,12 +129,14 @@ class board(object):
                                 if jump2 not in self.piecelist[0] and jump2 not in self.piecelist[1] and jump2 not in self.piecelist[2]and jump2 not in self.piecelist[3] and jump2 != data[-2]:
                                     #Does it not go out of bounds?   보드를 벗어나지 않는가?
                                     if jump2[0] >= 0 and jump2[0] < self.width and jump2[1] >= 0 and jump2[1] < self.height:
-                                        block2 = 1
-                                        for i in self.jumper(data, moves, color, move):
-                                            yield i
+                                        #Does the piece not jump over one already taken?   이미 잡은 말을 또 잡지는 않는가?
+                                        if target2 not in stop_back:
+                                            block2 = 0
+                                            for i in self.jumper(data, moves, color, move, stop_back):
+                                                yield i
                         #There is no more to jump over
                         #더 뛰어넘을 수 있는 것이 없음
-                        if block2 == 0:
+                        if block2:
                             yield data
 
         
@@ -150,18 +155,20 @@ class board(object):
 
                 
             
-    def jumper(self, data, moves, color, move):
+    def jumper(self, data, moves, color, move, stop_back):
         """
         Makes the moves of jumping over opponent's piece
         한 번 뛰어넘은 후의 움직임을 생성
         """
         
         data.append((data[-1][0] + 2 * move[0], data[-1][1] + 2 * move[1]))
+        a = data
         
         #Check if there is any more that one can jump over
         #더 뛰어넘을 수는 없는지 확인
         block2 = 0
         for move2 in moves:
+            data = a
             target = (data[-1][0] + move2[0], data[-1][1] + move2[1])
             jump = (data[-1][0] + 2 * move2[0], data[-1][1] + 2 * move2[1])
                             
@@ -171,9 +178,12 @@ class board(object):
                 if jump not in self.piecelist[0] and jump not in self.piecelist[1] and jump not in self.piecelist[2]and jump not in self.piecelist[3] and jump != data[-2]:
                     #Does it not go out of bounds?   보드를 벗어나지 않는가?
                     if jump[0] >= 0 and jump[0] < self.width and jump[1] >= 0 and jump[1] < self.height:
-                        block2 = 1
-                        for i in self.jumper(data, moves, color, move2):
-                            yield i
+                        #Does the piece not jump over one already taken?   이미 잡은 말을 또 잡지는 않는가?
+                        if target not in stop_back:
+                            block2 = 1
+                            stop_back.append(target)
+                            for i in self.jumper(data, moves, color, move2, stop_back):
+                                yield i
                        
         #There is no more to jump over
         #더 뛰어넘을 수 있는 것이 없음
@@ -252,7 +262,7 @@ class board(object):
         일반 말들이 끝까지 갔을 시에 왕으로 승격
         '''
         
-        if piece[1] == self.width - (1-color) * self.width - 1:
+        if piece[1] == self.width - 1 - (1-color) * (self.width - 1):
             self.piecelist[color].remove(piece)
             self.piecelist[color+2].append(piece)
             
