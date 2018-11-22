@@ -10,6 +10,11 @@
             https://github.com/codeofcarson/Checkers
             로 가시면 됩니다.
             이 프로그램은 영국식 채커 (또는 미국식 채커)의 규칙을 따릅니다.
+            
+            This is the unrefined version of the checkers reinforcement learning program.
+            Please use this code only if All.py is bugged.
+            이 프로그램은 채커 강화학습의 비정제 버전입니다.
+            All.py가 오류날 경우에만 사용해 주시기 바랍니다.
             '''
 
             #The game board
