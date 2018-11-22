@@ -10,6 +10,11 @@ Carson Wilcox님의 코드를 보시려면,
 https://github.com/codeofcarson/Checkers
 로 가시면 됩니다.
 이 프로그램은 영국식 채커 (또는 미국식 채커)의 규칙을 따릅니다.
+
+This is the refined version of the checkers reinforcement learning program, and has not been tested.
+If an error occurs, please use the unrefined version.
+이 프로그램은 채커 강화학습의 정제 버전이고, 디버깅 과정을 거치지 않았습니다.
+에러가 발생하면, 비정제 버전을 이용해 주시기 바랍니다.
 '''
 
 #The game board
@@ -49,10 +54,6 @@ class board():
         self.boardState = [[' '] * self.width for x in range(self.height)]
         self.updateBoard()
         
-        #Allows Forced Quit
-        #강제종료를 가능하게 함
-        self.force = 0
-        
         #needed in generating moves
         #행동가능성 생성에 관여
         self.block = 0
@@ -87,9 +88,7 @@ class board():
             #simply move.
             #우선적으로, 포획할 수 있는 말이 있는지 살핍니다. 있으면, 무조건 잡아야 하므로 단순히 움직이기만 할 수는 없습니다.
             for move in moves:
-                targetx = piece[0] + move[0]
-                targety = piece[1] + move[1]
-                target = (targetx, targety)
+                target = (piece[0] + move[0], piece[1] + move[1])
                     
                 #Figure whether the piece in front is the opponent's
                 #말 바로 앞의 말이 상대방의 말인지 확인
@@ -97,14 +96,12 @@ class board():
                     continue
                     
                 else:
-                    jumpx = targetx + move[0]
-                    jumpy = targety + move[1]
+                    jump = (target[0] + move[0], target[1] + move[1])
                     
                     #The piece must go in-bounds
                     #보드 내에서 움직여야 함
-                    if jumpx < 0 or jumpx >= self.width or jumpy < 0 or jumpy >= self.height:
+                    if jump[0] < 0 or jump[0] >= self.width or jump[1] < 0 or jump[1] >= self.height:
                         continue
-                    jump = (jumpx, jumpy)
                     
                     #If there is a piece behind the opponent's, we cannot capture
                     #상대방의 말 뒤에 다른 말이 있으면, 포획은 불가
@@ -114,15 +111,15 @@ class board():
                         self.block = 1    
                         
                         #list of piece jumped over   잡은 말들에 대한 리스트
-                        stop_back = [ ( (piece[0] + jumpx)//2, (piece[1] + jumpy)//2 ) ]     ###############changed
+                        stop_back = [ ( (piece[0] + jumpx)//2, (piece[1] + jumpy)//2 ) ]
                         
                         #Check if there is any more that one can jump over
                         #더 뛰어넘을 수는 없는지 확인
                         block2 = 1
                         for move in moves:
                             data = [piece, jump]
-                            target2 = (jumpx + move[0], jumpy + move[1])
-                            jump2 = (jumpx + 2 * move[0], jumpy + 2 * move[1])
+                            target2 = (jump[0] + move[0], jump[1] + move[1])
+                            jump2 = (jump[0] + 2 * move[0], jump[1] + 2 * move[1])
                             
                             #Opponent's piece nearby?    상대방의 말이 가까이 있는가?
                             if target2 in self.piecelist[3 - color] or target2 in self.piecelist[color + (-1) ** color]:
@@ -147,14 +144,12 @@ class board():
         if self.block != 1:
             for piece in self.piecelist[color]:
                 for move in moves:
-                    targetx = piece[0] + move[0]
-                    targety = piece[1] + move[1]
-                    target = (targetx, targety)
+                    target = (piece[0] + move[0], piece[1] + move[1])
                     
                     #The piece must go in-bounds
                     #보드 내에서 움직여야 함
                     if target not in self.piecelist[0] and target not in self.piecelist[1] and target not in self.piecelist[2]and target not in self.piecelist[3]:
-                        if targetx >= 0 and targetx < self.width and targety >= 0 and targety < self.height:
+                        if target[0] >= 0 and target[0] < self.width and target[1] >= 0 and target[1] < self.height:
                             yield ([piece, target])
 
                 
@@ -183,7 +178,7 @@ class board():
                     #Does it not go out of bounds?   보드를 벗어나지 않는가?
                     if jump[0] >= 0 and jump[0] < self.width and jump[1] >= 0 and jump[1] < self.height:
                         #Does the piece not jump over one already taken?   이미 잡은 말을 또 잡지는 않는가?
-                        if target not in stop_back:    #############changed
+                        if target not in stop_back:
                             block2 = 1
                             stop_back.append(target)
                             for i in self.jumper(data, moves, color, move2, stop_back):
@@ -260,7 +255,6 @@ class board():
                     self.draw = 0
                     self.piecelist[color + (-1) ** color].remove(((move[i][0] + move[i+1][0])/2, (move[i][1] + move[i+1][1])/2))
                 else:
-                    print(move, self.piecelist, color)
                     raise Exception
         self.updateBoard()
         return self.promote(move[-1], color, reward) if color <= 1 else reward
@@ -272,8 +266,7 @@ class board():
         Promotes men to kings if they reached the end                  
         일반 말들이 끝까지 갔을 시에 왕으로 승격
         '''
-        temp = 0 if color == 0 else 7                 #################changed
-        if piece[1] == temp:
+        if piece[1] == self.width - 1 - (1-color) * (self.width - 1):
             self.piecelist[color].remove(piece)
             self.piecelist[color+2].append(piece)
             self.draw = 0
@@ -298,45 +291,9 @@ class board():
         for piece in self.piecelist[3]:
             self.boardState[piece[1]][piece[0]] = 3
 
-
-
-    def printBoard(self):
-        """
-            Prints the game board
-            보드를 출력
-        """
-        print(self.unicode())
+###########################################################################################################################
         
-        
-        
-    def unicode(self):
-        """
-            Contains the unicode etc. for printing the board
-            보드 출력에 대한 정보를 지님
-        """
-        # Updates Game board
-        self.updateBoard()
-        lines = []
-        # This prints the numbers at the top of the Game Board
-        lines.append('      ' + '    '.join(map(str, range(self.width))))
-        # Prints the top of the gameboard in unicode
-        lines.append(u'  ╭' + (u'---┬' * (self.width-1)) + u'---╮')
-        
-        # Print the boards rows
-        for num, row in enumerate(self.boardState[:-1]):
-            lines.append(chr(num+65) + u' │ ' + u' │ '.join(row) + u' │')
-            lines.append(u'  ├' + (u'---┼' * (self.width-1)) + u'---┤')
-        
-        #Print the last row
-        lines.append(chr(self.height+64) + u' │ ' + u' │ '.join(self.boardState[-1]) + u' │')
-
-        # Prints the final line in the board
-        lines.append(u'  ╰' + (u'---┴' * (self.width-1)) + u'---╯')
-        return '\n'.join(lines)
-        
-        ###########################################################################################################################
-        
-        import math
+import math
 import gym
 from gym import spaces, logger
 from gym.utils import seeding
@@ -420,9 +377,9 @@ class Checkers():
         self.state = self.board.boardState
         return self.state
     
-    ##########################################################################################################
+##########################################################################################################
     
-    #DQN이다
+#DQN이다
 
 import sys
 import gym
@@ -450,13 +407,13 @@ class DQNAgent:
         self.discount_factor = 0.99
         self.learning_rate = 0.001
         self.epsilon = 1.0
-        self.epsilon_decay = 0.999
+        self.epsilon_decay = 0.99998
         self.epsilon_min = 0.01
-        self.batch_size = 64
-        self.train_start = 600
+        self.batch_size = 32
+        self.train_start = 50000
 
-        # 리플레이 메모리, 최대 크기 4000
-        self.memory = deque(maxlen=4000)
+        # 리플레이 메모리, 최대 크기 400000
+        self.memory = deque(maxlen=400000)
 
         # 모델과 타깃 모델 생성
         self.model = self.build_model()
@@ -532,128 +489,132 @@ class DQNAgent:
 
 #######################################################################################################
 
-if True:
-    #  환경 지정, 최대 타임스텝 수가 몇갠지는 위에 episode로
-    env = Checkers()
+
+#  환경 지정, 최대 타임스텝 수가 몇갠지는 위에 episode로
+env = Checkers()
     
-    start_piece = env.board.piecelist
-    start_board = env.board.boardState
+start_piece = env.board.piecelist
+start_board = env.board.boardState
     
-    EPISODES = 100
+EPISODES = 1000000
     
-    state_size = 64
-    action_size = 20
+state_size = 64
+action_size = 20
 
 
-    # DQN 에이전트 생성
-    agent = [DQNAgent(state_size, action_size), DQNAgent(state_size, action_size)]
+# DQN 에이전트 생성
+agent = [DQNAgent(state_size, action_size), DQNAgent(state_size, action_size)]
 
-    victories, episodes = [], []
+victories, episodes = [], []
 
-    probability0 = [0]
-    probability1 = [0]
-    probability2 = [0]
+probability0 = [0]
+probability1 = [0]
+probability2 = [0]
     
-    for e in range(EPISODES):
+for e in range(EPISODES):
 
-        done = False
-        # env 초기화
-        state = env.reset(start_piece,start_board)
-        state = np.reshape(state, [1, state_size])
-        env.turn = 0
+    done = False
+    # env 초기화
+    state = env.reset(start_piece,start_board)
+    state = np.reshape(state, [1, state_size])
+    env.turn = 0
         
-        env.draw = 0
+    env.draw = 0
         
-        actionprev = None
-        stateprev = None
-        next_stateprev = None
+    actionprev = None
+    stateprev = None
+    next_stateprev = None
 
-        while not done and env.draw < 80:
-            if agent[env.turn].render:
-                env.render()
+    while not done and env.draw < 80:
+        if agent[env.turn].render:
+            env.render()
         
-            env.getMove(env.turn)
+        env.getMove(env.turn)
                         
-            temp = 0
-            if len(env.available) == 0:
-                temp = 1
-                done = True
+        temp = 0
+        if len(env.available) == 0:
+            temp = 1
+            done = True
                 
-            if temp == 0:
+        if temp == 0:
                 
-                # 현재 상태로 행동을 선택
-                rewardsmall = 0
-                while True:
-                    action = agent[env.turn].get_action(state)
-                    if action >= len(env.available):
-                        rewardsmall -= 1
-                        continue
-                    break
+            # 현재 상태로 행동을 선택
+            rewardsmall = 0
+            while True:
+                action = agent[env.turn].get_action(state)
+                if action >= len(env.available):
+                    rewardsmall -= 1
+                    continue
+                break
 
 
-                # 선택한 행동으로 환경에서 한 타임스텝 진행
-                next_state, reward, done, info = env.step(action, rewardsmall)
-                next_state = np.reshape(next_state, [1, state_size])
-                # 에피소드가 중간에 끝나면 -100 보상
+            # 선택한 행동으로 환경에서 한 타임스텝 진행
+            next_state, reward, done, info = env.step(action, rewardsmall)
+            next_state = np.reshape(next_state, [1, state_size])
+            # 에피소드가 중간에 끝나면 -100 보상
 
-                # 리플레이 메모리에 샘플 <s, a, r, s'> 저장
-                agent[env.turn].append_sample(state, action, reward, next_state, done)
-                # 매 타임스텝마다 학습
-                if len(agent[env.turn].memory) >= agent[env.turn].train_start:
-                    agent[env.turn].train_model()
+            # 리플레이 메모리에 샘플 <s, a, r, s'> 저장
+            agent[env.turn].append_sample(state, action, reward, next_state, done)
+            # 매 타임스텝마다 학습
+            if len(agent[env.turn].memory) >= agent[env.turn].train_start:
+                agent[env.turn].train_model()
 
 
-                state = next_state
+            state = next_state
 
-                actionprev = action
-                stateprev = state
-                next_stateprev = next_state
+            actionprev = action
+            stateprev = state
+            next_stateprev = next_state
 
-            if done or temp:
-                # 각 에피소드마다 타깃 모델을 모델의 가중치로 업데이트
-                agent[env.turn].update_target_model()
+        if done or temp:
+            # 각 에피소드마다 타깃 모델을 모델의 가중치로 업데이트
+            agent[env.turn].update_target_model()
                 
-                # 이기면 victory가 1 올라가고 아니면 그대로 유지
-                victory = 0 if (env.turn) else 1
-                if env.board.draw == 80 or temp: victory = 2 
+            # 이기면 victory가 1 올라가고 아니면 그대로 유지
+            victory = 0 if (env.turn) else 1
+            if env.board.draw == 80 or temp: victory = 2 
+                
+            if victory != 2:
+                agent[1 - env.turn].append_sample(stateprev, actionprev, -1000, next_stateprev, not done)
                     
-                if victory != 2:
-                    agent[1 - env.turn].append_sample(stateprev, actionprev, -1000, next_stateprev, not done)
-                    
-                    # 에피소드마다 학습 결과 출력
-                    if e <= 99:
-                        probability0.append( (probability0[-1] * (e) + victory) / (e + 1) )
-                        probability1.append( (probability1[-1] * (e) + (1 - victory)) / (e + 1) )
-                    else:
-                        i = victories[-100] if victories[-100] != 2 else 0
-
-                        probability0.append((probability0[-1] * 100 - i + victory) / 100)
-                        probability1.append((probability1[-1] * 100 - (1 - i) + (1 - victory)) / 100)
-                        
+                # 에피소드마다 학습 결과 출력
+                if e <= 99:
+                    probability0.append( (probability0[-1] * (e) + victory) / (e + 1) )
+                    probability1.append( (probability1[-1] * (e) + (1 - victory)) / (e + 1) )
                 else:
-                    if e <= 99:
-                        probability0.append(probability0[-1] * e / (e + 1))
-                        probability1.append(probability1[-1] * e / (e + 1))
-                    else:
-                        i = victories[-100] if victories[-100] != 2 else 0
+                    i = victories[-100] if victories[-100] != 2 else 0
+                    j = victories[-100] if victories[-100] != 2 else 1
 
-                        probability0.append((probability0[-1] * 100 - i) / 100)
-                        probability1.append((probability1[-1] * 100 - (1 - i)) / 100)
-                probability2.append(1 - probability0[-1] - probability1[-1])
+                    probability0.append((probability0[-1] * 100 - i + victory) / 100)
+                    probability1.append((probability1[-1] * 100 - (1 - j) + (1 - victory)) / 100)
                     
-                if victory == 2:
-                    a = 'draw'
-                elif victory == 1:
-                    a = '1p'
+            else:
+                if e <= 99:
+                    probability0.append(probability0[-1] * e / (e + 1))
+                    probability1.append(probability1[-1] * e / (e + 1))
                 else:
-                    a = '2p'
-                victories.append(victory)
-                episodes.append(e)
-                pylab.plot(episodes, probability0[1:], 'b')
-                pylab.plot(episodes, probability1[1:], 'r')
-                pylab.plot(episodes, probability2[1:], 'g')
-                pylab.savefig("./save_graph/checkers_1.png")
-                print("episode:", e, "승리:", a , "  epsilon:", str(agent[env.turn].epsilon)[:5], "p1", probability0[-1], "p2", probability1[-1],"draw", probability2[-1] )
+                    i = victories[-100] if victories[-100] != 2 else 0
+                    j = victories[-100] if victories[-100] != 2 else 1
 
-                # "  memory length:", len(agent[env.turn].memory),
+                    probability0.append((probability0[-1] * 100 - i) / 100)
+                    probability1.append((probability1[-1] * 100 - (1 - j)) / 100)
+            probability2.append(1 - probability0[-1] - probability1[-1])
+                    
+            if victory == 2:
+                a = 'draw'
+            elif victory == 1:
+                a = '1p'
+            else:
+                a = '2p'
+            victories.append(victory)
+            episodes.append(e)
+            pylab.plot(episodes, probability0[1:], 'b')
+            pylab.plot(episodes, probability1[1:], 'r')
+            pylab.plot(episodes, probability2[1:], 'g')
+            
+            #You need to make a folder in your user folder with the name "save_graph"
+            #사용자 파일에 save_graph라는 폴더를 만들어야 합니다.
+            pylab.savefig("./save_graph/checkers_1.png")
+            print("episode:", e, "승리:", a , "  epsilon:", str(agent[env.turn].epsilon)[:5], "p1", probability0[-1], "p2", probability1[-1],"draw", probability2[-1] )
+
             env.turn = 1 - env.turn
