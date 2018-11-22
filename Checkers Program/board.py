@@ -132,6 +132,7 @@ class board(object):
                                         #Does the piece not jump over one already taken?   이미 잡은 말을 또 잡지는 않는가?
                                         if target2 not in stop_back:
                                             block2 = 0
+                                            stop_back.append(target2)
                                             for i in self.jumper(data, moves, color, move, stop_back):
                                                 yield i
                         #There is no more to jump over
