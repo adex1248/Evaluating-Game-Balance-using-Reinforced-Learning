@@ -113,7 +113,7 @@ class board(object):
                         self.block = 1    
                         
                         #list of piece jumped over   잡은 말들에 대한 리스트
-                        stop_back = [ ( (piece[0] + jumpx)//2, (piece[1] + jumpy)//2 ) ]
+                        stop_back = [ ( (piece[0] + jump[0])//2, (piece[1] + jump[1])//2 ) ]
                         
                         #Check if there is any more that one can jump over
                         #더 뛰어넘을 수는 없는지 확인
